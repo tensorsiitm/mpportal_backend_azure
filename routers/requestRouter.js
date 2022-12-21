@@ -7,21 +7,21 @@ const requestRouter = express.Router()
 
 //Add a new request
 requestRouter.post('/new',
-validator(["name","mobileNo","requestSubject","requestBody","status","statusUser"],["email","address","loksabha","assembly","panchayat","ward","pincode","documents"]),
+validator(["name","mobileNo","requestSubject","requestCategory","requestBody","status","statusUser"],["email","address","loksabha","assembly","panchayat","ward","pincode","documents"]),
 async (req,res) => {
 
     const uuid = req.body.uuid
 
     var queryText = `
-    insert into requests(posted_time,updated_time,user_id,name,mobile_no,email,address,loksabha,assembly,panchayat,ward,pincode,request_subject,request_body,status, status_user,documents)
-    values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) returning r_id`
+    insert into requests(posted_time,updated_time,user_id,name,mobile_no,email,address,loksabha,assembly,panchayat,ward,pincode,request_subject,request_category,request_body,status, status_user,documents)
+    values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) returning r_id`
 
     const postedTime = new getISTDate().toISOString()
     var queryValues = [postedTime,postedTime]
 
      const {documents}= req.body
 
-    const requestFields = ["name","mobileNo","email","address","loksabha","assembly","panchayat","ward","pincode","requestSubject","requestBody","status","statusUser"]
+    const requestFields = ["name","mobileNo","email","address","loksabha","assembly","panchayat","ward","pincode","requestSubject","requestCategory","requestBody","status","statusUser"]
 
     queryValues.push(uuid)
 
@@ -72,7 +72,7 @@ async (req,res) => {
 
 requestRouter.patch('/:rid',
 validateRID,
-validator([],['name' ,'mobileNo','email','address','loksabha','assembly','panchayat','ward','pincode','documents','status','statusUser','requestBody','requestSubject']),
+validator([],['name' ,'mobileNo','email','address','loksabha','assembly','panchayat','ward','pincode','documents','status','statusUser','requestBody','requestCategory','requestSubject']),
 async (req,res) => {
     const {name ,mobileNo,email,address,loksabha,assembly,panchayat,ward,pincode,documents,status,statusUser} = req.body
     
@@ -81,7 +81,7 @@ async (req,res) => {
     const updatedTime = new getISTDate().toISOString()
     var queryText = `update requests set updated_time = '${updatedTime}'`
     var queryValues = [rid]
-    valueIndex=2
+    var valueIndex = 2
 
     const columnName = {
         name:"name",
@@ -94,6 +94,7 @@ async (req,res) => {
         ward:"ward",
         pincode:"pincode",
         requestSubject:"request_subject",
+        requestCategory:"request_category",
         requestBody:"request_body",
         documents : "documents",
         status: "status",
@@ -139,7 +140,7 @@ async (req,res) => {
     const uuid = req.body.uuid
     var queryText = `select * from requests where user_id = '${uuid}' `
     var queryValues=[]
-    valueIndex = 1
+    var valueIndex = 1
 
     const columnName = {
         name:"name",
@@ -152,6 +153,7 @@ async (req,res) => {
         ward:"ward",
         pincode:"pincode",
         requestSubject:"request_subject",
+        requestCategory:"request_category",
         requestBody:"request_body",
         status:"status",
         statusUser:"status_user"
@@ -182,7 +184,7 @@ async (req,res) => {
                 details: Array.from(
                     result.rows,
                     (row) => {
-                        const { r_id:rid, user_id:uid, posted_time:postedTime, status, status_user:statusUser, request_subject:requestSubject, request_body:requestBody } = row
+                        const { r_id:rid, user_id:uid, posted_time:postedTime, status, status_user:statusUser, request_subject:requestSubject, request_category:requestCategory, request_body:requestBody } = row
                         return {
                             rid,
                             uid,
@@ -190,6 +192,7 @@ async (req,res) => {
                             status,
                             statusUser,
                             requestSubject,
+                            requestCategory,
                             requestBody
                         }
                     }
@@ -209,7 +212,7 @@ async (req,res) => {
 
     const uuid = req.body.uuid
     const rid = req.params.rid
-    const queryText = ` select name,loksabha,assembly,pincode,address,panchayat,mobile_no,email,ward,status,status_user,updated_time,posted_time,documents,request_body,request_subject,user_id from requests where r_id=$1`
+    const queryText = ` select name,loksabha,assembly,pincode,address,panchayat,mobile_no,email,ward,status,status_user,updated_time,posted_time,documents,request_body,request_category,request_subject,user_id from requests where r_id=$1`
     const queryValues = [rid]
 
     try {
@@ -221,7 +224,7 @@ async (req,res) => {
                 details : "Request not found"
             })
         }
-        const {name,loksabha,assembly,pincode,panchayat,mobile_no:mobileNo,email,address,ward,status,status_user:statusUser,updated_time:updatedTime,posted_time:postedTime,documents, request_body:requestBody, request_subject:requestSubject, user_id:uid} = result.rows[0]
+        const {name,loksabha,assembly,pincode,panchayat,mobile_no:mobileNo,email,address,ward,status,status_user:statusUser,updated_time:updatedTime,posted_time:postedTime,documents, request_body:requestBody, request_category:requestCategory, request_subject:requestSubject, user_id:uid} = result.rows[0]
         
         
         
@@ -242,6 +245,7 @@ async (req,res) => {
             postedTime,
             documents,
             requestBody,
+            requestCategory,
             requestSubject
         }) } else {
             res.status(401).send({"message":"Unauthorized!"})
@@ -260,8 +264,8 @@ async (req,res) => {
 
     const rid = req.params.rid
 
-    const moveRequestQueryText = `insert into del_requests (posted_time,updated_time,user_id,name,mobile_no,email,address,loksabha,assembly,panchayat,ward,pincode,request_subject,request_body,documents,r_id)
-    select posted_time::timestamp, updated_time::timestamp, user_id,name,mobile_no,email,address,loksabha,assembly,panchayat,ward,pincode,request_subject,request_body,documents,r_id from requests where r_id = $1`
+    const moveRequestQueryText = `insert into del_requests (posted_time,updated_time,user_id,name,mobile_no,email,address,loksabha,assembly,panchayat,ward,pincode,request_subject,request_category,request_body,documents,r_id)
+    select posted_time::timestamp, updated_time::timestamp, user_id,name,mobile_no,email,address,loksabha,assembly,panchayat,ward,pincode,request_subject,request_category,request_body,documents,r_id from requests where r_id = $1`
 
     const requestQueryText = `delete from requests where r_id =$1`
 
@@ -270,7 +274,7 @@ async (req,res) => {
      `
     const actionQueryText = `delete from actions where r_id = $1`
 
-    queryValues = [rid]
+    const queryValues = [rid]
 
     var client
 

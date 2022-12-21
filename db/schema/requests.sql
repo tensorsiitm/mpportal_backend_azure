@@ -14,6 +14,7 @@ CREATE TABLE public.requests
     ward text,
     pincode int,
     request_subject text NOT NULL,
+    request_category text NOT NULL,
     request_body text NOT NULL,
     status text NOT NULL,
     status_user text NOT NULL,

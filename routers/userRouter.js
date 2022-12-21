@@ -18,7 +18,7 @@ async (req,res) => {
     var firstHalf = `insert into users(user_id,name,mobile_no,posted_time`
     var secondHalf = `values($1,$2,$3,$4`
     var queryValues=[uuid,name,mobileNo,postedTime]
-    var valueIndex=5
+    var valueIndex = 5
 
     const columnName = {
         pincode:'pincode',
@@ -30,14 +30,14 @@ async (req,res) => {
         email:'email'   
     }
 
-    for (key in req.body) {
+    for (const key in req.body) {
         if (key=='name' || key=='mobileNo' || key=='uuid') continue
         firstHalf += `, ${columnName[key]}`
         secondHalf += `,\$${valueIndex}`
         queryValues.push(req.body[key])
         valueIndex +=1
     }
-    queryText = firstHalf +`)` + secondHalf + `)`
+    const queryText = firstHalf +`)` + secondHalf + `)`
 
     try {
         const result = await db.query(queryText,queryValues)

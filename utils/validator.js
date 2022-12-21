@@ -31,6 +31,8 @@ const newRequestBodyConstraints = {
         //Request Details
     requestSubject:Joi.string(),
 
+    requestCategory:Joi.string(),
+
     requestBody:Joi.string(),
 
 
@@ -61,12 +63,12 @@ export const validator = (reqKeys, optKeys) => {
         }
 
         for(const index in reqKeys){
-            key = reqKeys[index]
+            const key = reqKeys[index]
             constraint[key] = newRequestBodyConstraints[key].required()
         }
 
         for(const index in optKeys){
-            key = optKeys[index]
+            const key = optKeys[index]
             constraint[key] = newRequestBodyConstraints[key]
         }
 
